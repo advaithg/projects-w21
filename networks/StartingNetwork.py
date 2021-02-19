@@ -9,31 +9,18 @@ class StartingNetwork(torch.nn.Module):
 
     def __init__(self, input_dim, output_dim):
         super().__init__()
-<<<<<<< HEAD
-        self.flatten = nn.Flatten()        
-=======
         self.flatten = nn.Flatten()
->>>>>>> transferlearning
         self.fc1 = nn.Linear(input_dim, 128)
         self.fc2 = nn.Linear(128, output_dim)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-<<<<<<< HEAD
-        x = self.flatten(x)
-       # print(x.shape)
-        x = F.relu(self.fc1(x))
-       # print(x.shape)
-        x = F.relu(self.fc2(x))        
-        x = self.sigmoid(x)
-=======
         #x = self.flatten(x)
         #print(x.shape)
         x = F.relu(self.fc1(x))        
         x = (self.fc2(x))
         #print(x.shape)
         #x = self.sigmoid(x)
->>>>>>> transferlearning
         #print(x.shape)
         return x
 
