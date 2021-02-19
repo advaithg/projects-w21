@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.utils.tensorboard
 
+SAVE_PATH = "models"
 
 def starting_train(
     train_dataset, val_dataset, model, hyperparameters, n_eval, summary_path, device
@@ -93,6 +94,7 @@ def starting_train(
                 writer.add_scalar("train_loss", loss.item(), global_step = step)
                 writer.add_scalar("train_batch_accuracy", accuracy * 100, global_step = step)
 
+                torch.save(model.state_dict(), f"{SAVE_PATH}/model.pt")
 
                 # TODO:
                 # Compute validation loss and accuracy.
