@@ -148,6 +148,11 @@ def evaluate(val_loader, model, loss_fn, device):
         #accuracy = compute_accuracy(predictions.argmax(axis=1), labels)
         loss = loss_fn(predictions, labels)
         
+<<<<<<< HEAD
     print(n_correct)
     print(n_total)           
     print(f"Validation Accuracy: {n_correct/n_total} Loss: {loss}")
+=======
+    print(f"Validation Accuracy: {n_correct/n_total} Loss: {loss}")
+
+>>>>>>> transferlearning
