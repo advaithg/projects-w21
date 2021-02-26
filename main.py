@@ -7,9 +7,11 @@ import constants
 from datasets.StartingDataset import StartingDataset
 from networks.StartingNetwork import ConvNet
 from train_functions.starting_train import starting_train
+from networks.FineTune import initialize_model
 
 
 SUMMARIES_PATH = "training_summaries"
+num_classes  = 5
 
 
 def main():
@@ -34,11 +36,12 @@ def main():
     print("Batch size:", args.batch_size)
 
     # Initalize dataset and model. Then train the model!
-
     train_dataset = StartingDataset(images_dir, 'train.csv')
     val_dataset = StartingDataset(images_dir, 'val.csv')
-    model = ConvNet(3, 5)
+    model = ConvNet(num_classes, args.network)
     #train_dataset.__showitem__(0)
+    #print(model)
+
 
     starting_train(
         train_dataset=train_dataset,
@@ -47,7 +50,8 @@ def main():
         hyperparameters=hyperparameters,
         n_eval=args.n_eval,
         summary_path=summary_path,
-        device=device
+        device=device,
+        usePretrained = args.usePretrained
     )
 
 
@@ -55,9 +59,9 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=constants.EPOCHS)
     parser.add_argument("--batch_size", type=int, default=constants.BATCH_SIZE)
-    parser.add_argument(
-        "--n_eval", type=int, default=constants.N_EVAL,
-    )
+    parser.add_argument("--n_eval", type=int, default=constants.N_EVAL)
+    parser.add_argument("--usePretrained", type = bool, default = False)
+    parser.add_argument("--network", type=str, default = "resnet18" )
     return parser.parse_args()
 
 

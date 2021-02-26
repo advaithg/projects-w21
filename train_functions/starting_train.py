@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.tensorboard
-
-SAVE_PATH = "models"
+from data_augment import DataAugmenter
+import matplotlib.pyplot as plt
 
 def starting_train(
-    train_dataset, val_dataset, model, hyperparameters, n_eval, summary_path, device
+    train_dataset, val_dataset, model, hyperparameters, n_eval, summary_path, device, usePretrained
 ):
     """
     Trains and evaluates a model.
@@ -35,11 +35,28 @@ def starting_train(
     optimizer = optim.Adam(model.parameters())
     loss_fn = nn.CrossEntropyLoss()
 
+    augment = False
+
     model.to(device)
+
+    # Make true to train from preexisting net
+    if(usePretrained):
+        checkpoint = torch.load(f"models/model.pt", map_location=device)
+        # initialize state_dict from checkpoint to model
+        model.load_state_dict(checkpoint['state_dict'])
+        # initialize optimizer from checkpoint to optimizer
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        augment = True
+    
+    augment = True
+    
     loss_fn.to(device)
 
     # Initialize summary writer (for logging)
     writer = torch.utils.tensorboard.SummaryWriter(summary_path)
+
+    # Initialize data augmenter
+    augmenter = DataAugmenter()
 
     step = 0
     for epoch in range(epochs):
@@ -62,7 +79,9 @@ def starting_train(
 #         optimizer.step()
     
 #     print("Epoch ", epoch, "  Loss ", loss.item())
-
+        n_correct = 0
+        n_total = 0
+        cumul_loss = 0
         # Loop over each batch in the dataset
         for i, batch in enumerate(train_loader):
             print(f"\rIteration {i + 1} of {len(train_loader)} ...", end="")
@@ -71,6 +90,13 @@ def starting_train(
 
             img, labels = batch
             
+            # Make true to use data augmenter
+            if(augment):
+                img = augmenter.applyAugmentations(img)
+                #image = img.int()
+                #plt.imshow(image[0].permute(2, 1, 0))
+                #plt.show()
+
             img, labels = img.to(device), labels.to(device)
 
             optimizer.zero_grad()
@@ -78,6 +104,10 @@ def starting_train(
             predictions = model.forward(img)
 
             loss = loss_fn(predictions, labels)
+
+            n_correct += (predictions.argmax(axis=1) == labels).sum().item()
+            n_total += len(predictions.argmax(axis=1))
+            cumul_loss += loss.item()
 
             # Periodically evaluate our model + log to Tensorboard
             if step % n_eval == 0:
@@ -87,14 +117,22 @@ def starting_train(
                 #print(predictions.shape)
                 #n_correct += (predictions.argmax(axis=1) == labels).sum().item()
                 #n_total += len(predictions.argmax(axis=1))
-                accuracy = compute_accuracy(predictions.argmax(axis=1), labels)
-                print(f"Accuracy: {accuracy}")
+                accuracy = n_correct / n_total
+                print(f"Training accuracy: {accuracy * 100}")
 
                 # Log the results to Tensorboard.
-                writer.add_scalar("train_loss", loss.item(), global_step = step)
-                writer.add_scalar("train_batch_accuracy", accuracy * 100, global_step = step)
+                writer.add_scalar("train_loss", cumul_loss / n_total, global_step = step)
+                writer.add_scalar("train_accuracy", accuracy * 100, global_step = step)
 
-                torch.save(model.state_dict(), f"{SAVE_PATH}/model.pt")
+                # Save the model
+                checkpoint = {
+                    'epoch': epoch + 1,
+                    'state_dict': model.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'augment': augment
+                }
+                
+                torch.save(checkpoint, f"models/model.pt")
 
                 # TODO:
                 # Compute validation loss and accuracy.
@@ -112,6 +150,16 @@ def starting_train(
             optimizer.step()
             
         print("Epoch ", epoch, "Loss ", loss.item())
+    
+    # Save the model
+    checkpoint = {
+        'epoch': epoch + 1,
+        'state_dict': model.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'augment': augment
+    }
+    
+    torch.save(checkpoint, f"models/model.pt")
 
 
 def compute_accuracy(outputs, labels):
@@ -142,6 +190,7 @@ def evaluate(val_loader, model, loss_fn, device, step, writer):
     
     n_correct = 0
     n_total = 0
+    cumul_loss = 0
 
     for i, data in enumerate(val_loader):
         input_data, labels = data
@@ -151,9 +200,8 @@ def evaluate(val_loader, model, loss_fn, device, step, writer):
         n_total += len(predictions.argmax(axis=1))        
         #accuracy = compute_accuracy(predictions.argmax(axis=1), labels)
         loss = loss_fn(predictions, labels)
+        cumul_loss += loss.item()
         
-    print(f"Validation Accuracy: {n_correct/n_total} Loss: {loss}")
-    writer.add_scalar("validation_loss", loss.item(), global_step = step)
+    print(f"Validation Accuracy: {n_correct/n_total * 100} Loss: {loss}")
+    writer.add_scalar("validation_loss", cumul_loss / n_total, global_step = step)
     writer.add_scalar("validation_accuracy", n_correct * 100 / n_total, global_step = step)
-
-    
