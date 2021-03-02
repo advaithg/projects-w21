@@ -19,7 +19,7 @@ def main():
 
     # Get command line arguments    
     args = parse_arguments()
-    hyperparameters = {"epochs": args.epochs, "batch_size": args.batch_size}
+    hyperparameters = {"epochs": args.epochs, "batch_size": args.batch_size, "weight_decay": args.weight_decay}
 
     # Create path for training summaries
     label = f"cassava__{int(time.time())}"
@@ -38,7 +38,7 @@ def main():
     # Initalize dataset and model. Then train the model!
     train_dataset = StartingDataset(images_dir, 'train.csv')
     val_dataset = StartingDataset(images_dir, 'val.csv')
-    model = ConvNet(num_classes, args.network)
+    model = ConvNet(num_classes, args.network, args.p_dropout)
     #train_dataset.__showitem__(0)
     #print(model)
 
@@ -51,7 +51,7 @@ def main():
         n_eval=args.n_eval,
         summary_path=summary_path,
         device=device,
-        usePretrained = args.usePretrained
+        usePretrained = args.use_pretrained
     )
 
 
@@ -60,8 +60,10 @@ def parse_arguments():
     parser.add_argument("--epochs", type=int, default=constants.EPOCHS)
     parser.add_argument("--batch_size", type=int, default=constants.BATCH_SIZE)
     parser.add_argument("--n_eval", type=int, default=constants.N_EVAL)
-    parser.add_argument("--usePretrained", type = bool, default = False)
+    parser.add_argument("--use_pretrained", type = bool, default = False)
     parser.add_argument("--network", type=str, default = "resnet18" )
+    parser.add_argument("--weight_decay", type=float, default = 0.01)
+    parser.add_argument("--p_dropout", type=float, default=0.5)
     return parser.parse_args()
 
 

@@ -22,6 +22,7 @@ def starting_train(
 
     # Get keyword arguments
     batch_size, epochs = hyperparameters["batch_size"], hyperparameters["epochs"]
+    weight_decay = hyperparameters["weight_decay"]
 
     # Initialize dataloaders
     train_loader = torch.utils.data.DataLoader(
@@ -32,7 +33,7 @@ def starting_train(
     )
 
     # Initalize optimizer (for gradient descent) and loss function
-    optimizer = optim.Adam(model.parameters())
+    optimizer = optim.Adam(model.parameters(), weight_decay = weight_decay)
     loss_fn = nn.CrossEntropyLoss()
 
     augment = False
@@ -62,23 +63,6 @@ def starting_train(
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
 
-#convolutional
-# for epoch in range(EPOCH):
-#     for i, data in enumerate(train_dataloader):
-#         input_data, labels = data
-
-#         optimizer.zero_grad()
-        
-#         predictions = conv_network.forward(input_data)
-#         loss = loss_fn(predictions, labels)
-        
-#         step += 1
-#         train_summary.add_scalar("train_loss", loss, global_step = step)
-        
-#         loss.backward()
-#         optimizer.step()
-    
-#     print("Epoch ", epoch, "  Loss ", loss.item())
         n_correct = 0
         n_total = 0
         cumul_loss = 0
@@ -113,10 +97,6 @@ def starting_train(
             if step % n_eval == 0:
                 # TODO:
                 # Compute training loss and accuracy.
-                #print(labels.shape)
-                #print(predictions.shape)
-                #n_correct += (predictions.argmax(axis=1) == labels).sum().item()
-                #n_total += len(predictions.argmax(axis=1))
                 accuracy = n_correct / n_total
                 print(f"Training accuracy: {accuracy * 100}")
 
