@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, models, transforms
+from efficientnet_pytorch import EfficientNet
 
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:
@@ -81,6 +82,13 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs,num_classes)
         input_size = 299
+
+    elif model_name == "efficientnet":
+        model_ft = EfficientNet.from_pretrained('efficientnet-b0')
+        set_parameter_requires_grad(model_ft, feature_extract)
+        num_ftrs = model_ft.fc.in_features
+        model_ft.fc = nn.Linear(num_ftrs, num_classes)
+        input_size = 224
 
     else:
         print("Invalid model name, exiting...")
