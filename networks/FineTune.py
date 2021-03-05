@@ -86,8 +86,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
     elif model_name == "efficientnet":
         model_ft = EfficientNet.from_pretrained('efficientnet-b0')
         set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.fc.in_features
-        model_ft.fc = nn.Linear(num_ftrs, num_classes)
+        model_ft._fc.out_features = num_classes
         input_size = 224
 
     else:

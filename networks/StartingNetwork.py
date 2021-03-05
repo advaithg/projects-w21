@@ -30,10 +30,11 @@ class ConvNet(torch.nn.Module):
 
         #pretrained transfer learning network:
         self.network, input_size = initialize_model(network, output_dim, False, use_pretrained=True)
-        #self.resnet = torch.hub.load('pytorch/vision:v0.6.0', 'resnet18', pretrained=True)
-        self.network = torch.nn.Sequential(*(list(self.network.children())[:-1]))
-        #self.resnet.eval()
-        self.first = StartingNetwork(512, output_dim, p_dropout)
+        if(network != "efficientnet"):
+            self.network = torch.nn.Sequential(*(list(self.network.children())[:-1]))
+            self.first = StartingNetwork(512, output_dim, p_dropout)
+        else:
+            self.first = StartingNetwork(1000, output_dim, p_dropout)
 
 
     def forward(self, x):

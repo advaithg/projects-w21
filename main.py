@@ -62,7 +62,7 @@ def parse_arguments():
     parser.add_argument("--n_eval", type=int, default=constants.N_EVAL)
     parser.add_argument("--use_pretrained", type = bool, default = False)
     parser.add_argument("--network", type=str, default = "resnet18" )
-    parser.add_argument("--weight_decay", type=float, default = 0.01)
+    parser.add_argument("--weight_decay", type=float, default = 0.00001)
     parser.add_argument("--p_dropout", type=float, default=0.5)
     return parser.parse_args()
 
