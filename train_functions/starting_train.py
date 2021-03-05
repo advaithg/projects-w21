@@ -59,13 +59,13 @@ def starting_train(
     # Initialize data augmenter
     augmenter = DataAugmenter()
 
+    cumul_loss = 0
     step = 0
+    n_correct = 0
+    n_total = 0
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
-
-        n_correct = 0
-        n_total = 0
-        cumul_loss = 0
+        
         # Loop over each batch in the dataset
         for i, batch in enumerate(train_loader):
             print(f"\rIteration {i + 1} of {len(train_loader)} ...", end="")
@@ -101,8 +101,12 @@ def starting_train(
                 print(f"Training accuracy: {accuracy * 100}")
 
                 # Log the results to Tensorboard.
-                writer.add_scalar("train_loss", cumul_loss / n_total, global_step = step)
-                writer.add_scalar("train_accuracy", accuracy * 100, global_step = step)
+                writer.add_scalar("train_loss", cumul_loss / n_eval, global_step = step * 100 / n_eval)
+                writer.add_scalar("train_accuracy", accuracy * 100, global_step = step * 100 / n_eval)
+
+                cumul_loss = 0
+                n_correct = 0
+                n_total = 0
 
                 # Save the model
                 checkpoint = {
@@ -120,7 +124,7 @@ def starting_train(
                 # Don't forget to turn off gradient calculations!
                 model.eval()
                 with torch.no_grad():
-                    evaluate(val_loader, model, loss_fn, device, step, writer)
+                    evaluate(val_loader, model, loss_fn, device, step, writer, n_eval, batch_size)
                 
    
             model.train()
@@ -162,7 +166,7 @@ def compute_accuracy(outputs, labels):
     return n_correct / n_total
 
 
-def evaluate(val_loader, model, loss_fn, device, step, writer):
+def evaluate(val_loader, model, loss_fn, device, step, writer, n_eval, batch_size):
     """
     Computes the loss and accuracy sof a model on the validation dataset.
     """
@@ -183,5 +187,5 @@ def evaluate(val_loader, model, loss_fn, device, step, writer):
         cumul_loss += loss.item()
         
     print(f"Validation Accuracy: {n_correct/n_total * 100} Loss: {loss}")
-    writer.add_scalar("validation_loss", cumul_loss / n_total, global_step = step)
-    writer.add_scalar("validation_accuracy", n_correct * 100 / n_total, global_step = step)
+    writer.add_scalar("validation_loss", cumul_loss * batch_size / n_total, global_step = step * 100 / n_eval)
+    writer.add_scalar("validation_accuracy", n_correct * 100 / n_total, global_step = step * 100 / n_eval)
